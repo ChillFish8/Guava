@@ -1,15 +1,13 @@
 package ffmpeg_helpers
 
-
 type Track struct {
-	Id string
+	Id        string
 	StreamUrl string
 
-	VideoTitle string
-	VideoUrl string
-	VideoDuration float64
+	VideoTitle    string
+	VideoUrl      string
+	VideoDuration int64
 }
-
 
 func FetchTrack(url string, videoType string) (Track, error) {
 	switch videoType {
@@ -25,6 +23,3 @@ func FetchTrack(url string, videoType string) (Track, error) {
 func fetchSoundCloud(url string) (Track, error) {
 	return Track{}, nil
 }
-
-
-
