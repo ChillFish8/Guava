@@ -10,9 +10,9 @@ import (
 
 	"github.com/rylio/ytdl"
 
-	"github.com/iawia002/annie/extractors/types"
-	"github.com/iawia002/annie/request"
-	"github.com/iawia002/annie/utils"
+	"../../request"
+	"../../utils"
+	"../types"
 )
 
 type streamFormat struct {
@@ -301,6 +301,10 @@ func extractVideoURLS(data playerResponseType, videoInfo *ytdl.VideoInfo) (map[s
 	}
 
 	for _, f := range data.StreamingData.AdaptiveFormats {
+		if !strings.HasPrefix(f.MimeType, "audio") {
+			continue
+		}
+
 		stream, err := genStream(f, videoInfo)
 		if err != nil {
 			return nil, err

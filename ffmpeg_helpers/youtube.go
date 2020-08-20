@@ -6,9 +6,6 @@ import (
 	"fmt"
 )
 
-
-
-
 func fetchYoutube(url string) (Track, error) {
 	x := types.Options{
 		Playlist:         false,
@@ -27,7 +24,7 @@ func fetchYoutube(url string) (Track, error) {
 	check(err)
 
 	for k, v := range data[0].Streams {
-		fmt.Println(k, v.Parts[0].URL)
+		fmt.Println(k, v.Quality)
 	}
 	return Track{}, nil
 }
