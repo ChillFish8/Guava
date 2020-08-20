@@ -4,7 +4,13 @@ import (
 	"../extractors/types"
 	"../extractors/youtube"
 	"../utils"
+	"fmt"
+	"regexp"
+	"strconv"
+	"strings"
 )
+
+var reg, _ = regexp.Compile("&dur=([0-9]*\\.[0-9]*)&")
 
 func fetchYoutube(url string) (Track, error) {
 	basicOptions := types.Options{
@@ -24,12 +30,26 @@ func fetchYoutube(url string) (Track, error) {
 	check(err)
 
 	for _, v := range data[0].Streams {
+		match := reg.FindAllString(v.Parts[0].URL, 1)
+
+		dur := 1.23
+		if len(match) >= 1 {
+			sub := strings.ReplaceAll(match[0], "&dur=", "")
+			sub = strings.ReplaceAll(sub, "&", "")
+			fmt.Println(sub)
+			dur, _ = strconv.ParseFloat(sub, 64)
+		} else {
+			dur = 0.0
+		}
+
+		check(err)
+
 		track := Track{
 			Id:            utils.GenerateId(),
 			StreamUrl:     v.Parts[0].URL,
 			VideoTitle:    data[0].Title,
 			VideoUrl:      data[0].URL,
-			VideoDuration: v.Size,
+			VideoDuration: dur,
 		}
 		return track, nil
 	}

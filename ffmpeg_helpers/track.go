@@ -6,7 +6,7 @@ type Track struct {
 
 	VideoTitle    string
 	VideoUrl      string
-	VideoDuration int64
+	VideoDuration float64
 }
 
 func FetchTrack(url string, videoType string) (Track, error) {
