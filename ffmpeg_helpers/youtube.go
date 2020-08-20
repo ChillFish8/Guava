@@ -3,11 +3,11 @@ package ffmpeg_helpers
 import (
 	"../extractors/types"
 	"../extractors/youtube"
-	"fmt"
+	"../utils"
 )
 
 func fetchYoutube(url string) (Track, error) {
-	x := types.Options{
+	basicOptions := types.Options{
 		Playlist:         false,
 		Items:            "",
 		ItemStart:        0,
@@ -20,11 +20,18 @@ func fetchYoutube(url string) (Track, error) {
 		YoukuPassword:    "",
 	}
 	extractor := youtube.New()
-	data, err := extractor.Extract(url, x)
+	data, err := extractor.Extract(url, basicOptions)
 	check(err)
 
-	for k, v := range data[0].Streams {
-		fmt.Println(k, v.Quality)
+	for _, v := range data[0].Streams {
+		track := Track{
+			Id:            utils.GenerateId(),
+			StreamUrl:     v.Parts[0].URL,
+			VideoTitle:    data[0].Title,
+			VideoUrl:      data[0].URL,
+			VideoDuration: v.Size,
+		}
+		return track, nil
 	}
 	return Track{}, nil
 }
