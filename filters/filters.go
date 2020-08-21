@@ -1,4 +1,4 @@
-package helpers
+package filters
 
 import "fmt"
 
@@ -30,6 +30,17 @@ func (f *Filter) ToString() string {
 	return base
 }
 
+// Some helper functions for making a new filter manager.
+func NewFFMpegFilters(vol int, speed float32) FFMpegFilters {
+	return FFMpegFilters{
+		Volume:       vol,
+		Speed:        speed,
+		OtherFilters: map[string]Filter{},
+	}
+}
+
+// A struct that contains the basic volume and speed filters for ffmpeg
+// as well as adding optional filters which is then formatted before starting.
 type FFMpegFilters struct {
 	Volume       int     `json:"volume"`
 	Speed        float32 `json:"speed"`
