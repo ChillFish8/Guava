@@ -1,13 +1,14 @@
-package ffmpeg_helpers
+package ffmpeg_lib
 
 import (
-	"../extractors/types"
-	"../extractors/youtube"
-	"../utils"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"../extractors/types"
+	"../extractors/youtube"
+	"../utils"
 )
 
 var reg, _ = regexp.Compile("&dur=([0-9]*\\.[0-9]*)&")
@@ -27,7 +28,7 @@ func fetchYoutube(url string) (Track, error) {
 	}
 	extractor := youtube.New()
 	data, err := extractor.Extract(url, basicOptions)
-	check(err)
+	utils.Check(err)
 
 	for _, v := range data[0].Streams {
 		match := reg.FindAllString(v.Parts[0].URL, 1)
@@ -42,7 +43,7 @@ func fetchYoutube(url string) (Track, error) {
 			dur = 0.0
 		}
 
-		check(err)
+		utils.Check(err)
 
 		track := Track{
 			Id:            utils.GenerateId(),

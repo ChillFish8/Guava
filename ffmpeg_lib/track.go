@@ -1,4 +1,4 @@
-package ffmpeg_helpers
+package ffmpeg_lib
 
 type Track struct {
 	Id        string

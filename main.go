@@ -1,86 +1,77 @@
 package main
 
 import (
-	"./ffmpeg_helpers"
+	"bufio"
+	"bytes"
+	"encoding/binary"
 	"fmt"
-	"github.com/xfrr/goffmpeg/ffmpeg"
-	"github.com/xfrr/goffmpeg/transcoder"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
-	"time"
+
+	"./config"
+	"./ffmpeg_lib"
+	"./ffmpeg_lib/filters"
+	"./utils"
 )
 
 func main() {
-	resp, err := ffmpeg_helpers.FetchTrack(
+	resp, err := ffmpeg_lib.FetchTrack(
 		"https://www.youtube.com/watch?v=l3vbvF8bQfI",
 		"YOUTUBE",
 	)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	getTrack(resp.StreamUrl)
+	utils.Check(err)
+	testFfmpeg(resp.StreamUrl)
 }
 
-func getTrack(url string) {
-	start := time.Now()
-	// Create new instance of transcoder
-	trans := new(transcoder.Transcoder)
-	// Initialize an empty transcoder
-	err := trans.InitializeEmptyTranscoder()
-	if err != nil {
-		log.Fatal(err)
-	}
+func testFfmpeg(url string) {
+	// Create a New FFMpeg player
+	trans := ffmpeg_lib.NewFFmpeg()
 
-	conf := ffmpeg.Configuration{
-		FfmpegBin:  "F:\\Guava\\bin\\ffmpeg.exe",
-		FfprobeBin: "F:\\Guava\\bin\\ffprobe.exe",
-	}
-	trans.SetConfiguration(conf)
-	new := trans.MediaFile()
-
-	new.SetAudioFilter("volume=1")
-	trans.SetMediaFile(new)
-
+	// Set stream file
 	_ = trans.SetInputPath(url)
+
+	// Set the output pipe
 	reader, err := trans.CreateOutputPipe("mp3")
-	if err != nil {
-		log.Fatalln(err)
-	}
+	utils.Check(err)
 
+	// Create a buffer
+	ffmpegBuff := bufio.NewReaderSize(reader, 16384)
+
+	// Start ffmpeg
 	done := trans.Run(false)
-	fmt.Println(time.Now().Sub(start))
 
-	trans.MediaFile().SetAudioFilter("volume=2")
-	err = handleOutput(reader)
-	if err != nil {
-		log.Fatalln(err)
+	file, _ := os.Create("./example/example_out.mp3")
+
+	for {
+		audioBuff := make([]int16, config.FrameSize*config.Channels)
+		err = binary.Read(ffmpegBuff, binary.LittleEndian, &audioBuff)
+		if err == io.EOF || err == io.ErrUnexpectedEOF {
+			break
+		}
+		if err != nil {
+			log.Fatalln("error reading from ffmpeg stdout", err)
+			return
+		}
+
+		newAudioBuff := filters.Volume(audioBuff, 0)
+
+		buf := new(bytes.Buffer)
+		err = binary.Write(buf, binary.LittleEndian, newAudioBuff)
+		if err == io.EOF || err == io.ErrUnexpectedEOF {
+			file.Write(buf.Bytes())
+			break
+		}
+		if err != nil {
+			log.Fatalln("error reading from ffmpeg stdout", err)
+			return
+		}
+
+		file.Write(buf.Bytes())
 	}
 
 	err = <-done
-	if err != nil {
-		log.Fatalln(err)
-	}
+	utils.Check(err)
 
-}
-
-func handleOutput(read *io.PipeReader) error {
-	defer read.Close()
-
-	file, err := os.Create("./example/example_out_2.mp3")
-	if err != nil {
-		return err
-	}
-
-	//buffer := make([]byte, 1024)
-	// _, err := io.ReadFull(read, buffer)
-	bytearr, err := ioutil.ReadAll(read)
-	if err != nil {
-		return err
-	}
-
-	_, _ = file.Write(bytearr)
-	return nil
+	fmt.Println("Encoded File!")
 }
