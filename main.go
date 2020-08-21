@@ -1,29 +1,31 @@
 package main
 
 import (
+	"./ffmpeg_helpers"
 	"fmt"
-	"log"
-
 	"github.com/xfrr/goffmpeg/ffmpeg"
 	"github.com/xfrr/goffmpeg/transcoder"
-
-	"./ffmpeg_helpers"
+	"io"
+	"io/ioutil"
+	"log"
+	"os"
+	"time"
 )
 
-
 func main() {
-	res, err := ffmpeg_helpers.FetchTrack(
-		"https://www.youtube.com/watch?v=kydqgoVUiVs",
+	resp, err := ffmpeg_helpers.FetchTrack(
+		"https://www.youtube.com/watch?v=l3vbvF8bQfI",
 		"YOUTUBE",
-		)
-	if err != nil { log.Fatalln(err) }
+	)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
-	fmt.Println(res)
+	getTrack(resp.StreamUrl)
 }
 
-
-func main2() {
-
+func getTrack(url string) {
+	start := time.Now()
 	// Create new instance of transcoder
 	trans := new(transcoder.Transcoder)
 	// Initialize an empty transcoder
@@ -32,49 +34,53 @@ func main2() {
 		log.Fatal(err)
 	}
 
-	conf :=  ffmpeg.Configuration{
-		FfmpegBin:   "F:\\Guava\\bin\\ffmpeg.exe",
-		FfprobeBin:  "F:\\Guava\\bin\\ffprobe.exe",
+	conf := ffmpeg.Configuration{
+		FfmpegBin:  "F:\\Guava\\bin\\ffmpeg.exe",
+		FfprobeBin: "F:\\Guava\\bin\\ffprobe.exe",
 	}
 	trans.SetConfiguration(conf)
 	new := trans.MediaFile()
-	//new.SetSeekTime("1:20")
-	new.SetAudioFilter("volume=2,atempo=2.0")
+
+	new.SetAudioFilter("volume=1")
 	trans.SetMediaFile(new)
 
-	// Create an input pipe to write to, which will return *io.PipeWriter
-	_ = trans.SetInputPath("./example/example.mp3")
-	_ = trans.SetOutputPath("./example/example_out.mp3")
+	_ = trans.SetInputPath(url)
+	reader, err := trans.CreateOutputPipe("mp3")
+	if err != nil {
+		log.Fatalln(err)
+	}
 
-	//f, _ := os.Create("./example/example_out.mp3")
-	//go func() {
-	//	defer r.Close()
-	//	defer wg.Done()
-	//	defer f.Close()
-	//
-	//	// Read data from output pipe
-	//	buff := bytes.Buffer{}
-	//	new := buff.Bytes()
-	//	n, err := io.ReadFull(r, new)
-	//	if err != nil {
-	//		fmt.Println("well oof,", n)
-	//	}
-	//	_, err = f.Write(new)
-	//	if err != nil { println("fuck") }
-		// Handle error and data...
-	//}()
+	done := trans.Run(false)
+	fmt.Println(time.Now().Sub(start))
 
-	// Start transcoder process without checking progress
-	done := trans.Run(true)
+	trans.MediaFile().SetAudioFilter("volume=2")
+	err = handleOutput(reader)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
-	progress := trans.Output()
-
-	thing :=<- progress
-	fmt.Println(thing)
-	// This channel is used to wait for the transcoding process to end
 	err = <-done
-	// Handle error...
+	if err != nil {
+		log.Fatalln(err)
+	}
 
-	//time.Sleep(4 * time.Second)
+}
 
+func handleOutput(read *io.PipeReader) error {
+	defer read.Close()
+
+	file, err := os.Create("./example/example_out_2.mp3")
+	if err != nil {
+		return err
+	}
+
+	//buffer := make([]byte, 1024)
+	// _, err := io.ReadFull(read, buffer)
+	bytearr, err := ioutil.ReadAll(read)
+	if err != nil {
+		return err
+	}
+
+	_, _ = file.Write(bytearr)
+	return nil
 }
