@@ -17,6 +17,6 @@ const (
 )
 
 var FFMpegConfig = map[string]string{
-	"FFmpegBin":  "./bin/ffmpeg.exe",
-	"FFprobeBin": "./bin/ffplay.exe",
+	"FFmpegBin":  "./bin/ffmpeg",
+	"FFprobeBin": "./bin/ffplay",
 }

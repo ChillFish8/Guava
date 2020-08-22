@@ -1,4 +1,4 @@
-package ffmpeg_lib
+package audioprocessing
 
 import "../filters"
 
