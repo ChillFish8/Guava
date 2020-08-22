@@ -1,7 +1,7 @@
 package main
 
 import (
-	"./filters"
+	"./audio/filters"
 	"fmt"
 	"log"
 )
