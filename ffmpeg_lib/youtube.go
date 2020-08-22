@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"../extractors/types"
-	"../extractors/youtube"
 	"../utils"
+	"../videostreams/extractors/types"
+	"../videostreams/extractors/youtube"
 )
 
 var reg, _ = regexp.Compile("&dur=([0-9]*\\.[0-9]*)&")
