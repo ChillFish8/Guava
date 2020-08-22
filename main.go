@@ -2,6 +2,8 @@ package main
 
 import (
 	"./audio/filters"
+	"./discord"
+
 	"fmt"
 	"log"
 )
@@ -23,4 +25,6 @@ func main() {
 
 	output := ffFilters.ToString()
 	fmt.Println(output)
+
+	discord.Connect()
 }
